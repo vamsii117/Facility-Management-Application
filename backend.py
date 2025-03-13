@@ -158,24 +158,37 @@ def encode_image(image_bytes):
 
 def extract_text_from_image(image_bytes):
     """Uses OpenAI GPT-4o to extract text from an image."""
-    base64_image = encode_image(image_bytes)
-    client = openai.Client()
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "Extract any readable brand name or text from the given image."},
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": "Extract text from this image and return only the text:"},
-                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
-                ]
-            }
-        ],
-        max_tokens=300
-    )
+    try:
+        base64_image = encode_image(image_bytes)
+        client = openai.Client()
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "Extract any readable brand name or text from the given image."},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "Extract text from this image and return only the text:"},
+                        {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
+                    ]
+                }
+            ],
+            max_tokens=300
+        )
 
-    return response["choices"][0]["message"]["content"]
+        # Validate response structure
+        if response.choices and len(response.choices) > 0:
+            content = response.choices[0].message.content.strip()
+            if content:
+                return content
+        
+        print("No content found in response:", response)
+        return "No text extracted from the image."
+
+    except Exception as e:
+        print(f"Error extracting text from image: {e}")
+        return "Error occurred while processing the image."
+
 
 def identify_ac_company(extracted_text):
     """Matches extracted text with known AC company names."""
