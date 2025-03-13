@@ -420,8 +420,7 @@ def categorize_issue(description):
             {"role": "user", "content": f"Categorize this issue: {description}. Options: electrical, plumbing, other. Respond only with one of these options."}
         ]
     )
-    return response['choices'][0]['message']['content'].strip().lower()
-
+    return response.choices[0].message.content.strip().lower()
 
 def check_ticket_status_by_user(user_identifier):
     tickets = session.query(Ticket).filter_by(user_identifier=user_identifier).all()
