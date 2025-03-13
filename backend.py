@@ -231,8 +231,10 @@ def get_common_issues(company):
     """Generates common issues dynamically for the detected AC brand using OpenAI."""
     prompt = f"List 5 common issues for {company} air conditioners with a short description. Format: 'Issue Name - Description' (e.g., 'Not Cooling - AC is running but not cooling properly')."
 
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
+    client = openai.Client()  # Initialize the OpenAI client (v1.0+ syntax)
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": prompt}
@@ -240,10 +242,11 @@ def get_common_issues(company):
         max_tokens=200
     )
 
-    issues_text = response["choices"][0]["message"]["content"]
+    issues_text = response.choices[0].message.content
     issues = [issue.strip() for issue in issues_text.split("\n") if issue]
 
     return issues if issues else ["No common issues found."]
+
 
 ###################################################################################################
 # get worker issues
