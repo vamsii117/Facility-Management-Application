@@ -159,8 +159,8 @@ def encode_image(image_bytes):
 def extract_text_from_image(image_bytes):
     """Uses OpenAI GPT-4o to extract text from an image."""
     base64_image = encode_image(image_bytes)
-
-    response = openai.ChatCompletion.create(
+    client = openai.Client()
+    response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
             {"role": "system", "content": "Extract any readable brand name or text from the given image."},
@@ -412,7 +412,8 @@ def translate_to_english(text, source_lang, detect_only=False):
 
 # Categorize issue using OpenAI
 def categorize_issue(description):
-    response = openai.ChatCompletion.create(
+    client = openai.Client()
+    response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a helpful assistant that categorizes facility issues."},
