@@ -5,5 +5,8 @@ pandas
 plotly
 twilio
 openai
--------
-pip install fastapi uvicorn sqlalchemy sqlite3 twilio python-dotenv openai speechrecognition googletrans plotly
+fastapi
+uvicorn
+python-dotenv
+speechrecognition
+googletrans
