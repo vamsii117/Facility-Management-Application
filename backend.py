@@ -2,7 +2,7 @@ import openai
 import streamlit as st
 from PIL import Image
 import io
-from fuzzywuzzy import fuzz, process
+# from fuzzywuzzy import fuzz, process
 from sqlalchemy import create_engine, Column, String, Integer, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from sqlalchemy.orm import Session
