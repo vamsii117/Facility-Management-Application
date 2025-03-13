@@ -22,6 +22,7 @@ from numpy.linalg import norm
 from googletrans import Translator 
 
 import streamlit as st
+from twilio.rest import Client
 
 # Fetch secrets from Streamlit Cloud
 openai.api_key = st.secrets["OPENAI_API_KEY"]
