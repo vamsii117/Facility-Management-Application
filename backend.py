@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 import speech_recognition as sr
 import uuid
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import sqlite3
 import plotly.express as px
 import os
@@ -21,10 +21,20 @@ import pandas as pd
 from numpy.linalg import norm
 from googletrans import Translator 
 
+import streamlit as st
+
+# Fetch secrets from Streamlit Cloud
+openai.api_key = st.secrets["OPENAI_API_KEY"]
+TWILIO_ACCOUNT_SID = st.secrets["TWILIO_ACCOUNT_SID"]
+TWILIO_AUTH_TOKEN = st.secrets["TWILIO_AUTH_TOKEN"]
+TWILIO_WHATSAPP_NUMBER = st.secrets["TWILIO_WHATSAPP_NUMBER"]
+WORKER_WHATSAPP_NUMBER = st.secrets["WORKER_WHATSAPP_NUMBER"]
+
+'''
 # environment variables
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
-###################################################################################################
+
 #for the whatsapp
 from twilio.rest import Client
 
@@ -32,6 +42,7 @@ TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER")
 WORKER_WHATSAPP_NUMBER = os.getenv("WORKER_WHATSAPP_NUMBER")  # ✅ Single predefined number
+'''
 
 def send_whatsapp_message(worker_name, issue_type, description):
     client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
@@ -221,208 +232,6 @@ def get_common_issues(company):
 
     return issues if issues else ["No common issues found."]
 
-
-"""
-company_issues = {
-    "daikin": ["Water leakage", "Not cooling", "Strange noise", "Remote not working", "Power fluctuation", "Airflow problem", "Ice formation", "Bad odor", "High electricity consumption", "Compressor not working"],
-    "mits": ["Water leakage", "Low cooling", "Noisy operation", "Sensor issue", "Remote malfunction", "Thermostat issue", "Power surge", "Filter clogging", "Fan not spinning", "Compressor failure"],
-    # Add more companies as needed
-}
-def load_sample_images():
-    sample_images = {}
-    base_dir = "ac"
-    for company in os.listdir(base_dir):
-        company_dir = os.path.join(base_dir, company)
-        images = []
-        for img_file in os.listdir(company_dir):
-            img_path = os.path.join(company_dir, img_file)
-            image = Image.open(img_path).convert('L')
-            image = image.resize((100, 100))
-            images.append(np.array(image))
-        sample_images[company] = images
-    return sample_images
-
-# Calculate Image Similarity using ORB and BFMatcher
-def calculate_similarity(img1, img2):
-    orb = cv2.ORB_create()
-    
-    # Detect and Compute ORB Descriptors
-    kp1, des1 = orb.detectAndCompute(img1, None)
-    kp2, des2 = orb.detectAndCompute(img2, None)
-    
-    # Check if descriptors are None
-    if des1 is None or des2 is None:
-        return 0  # No similarity if keypoints aren't found
-
-    # Ensure descriptors are of the same type
-    des1 = des1.astype(np.uint8)
-    des2 = des2.astype(np.uint8)
-    
-    # Use BFMatcher for Hamming distance
-    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-    matches = bf.match(des1, des2)
-    matches = sorted(matches, key=lambda x: x.distance)
-    
-    # Calculate similarity based on number of good matches
-    similarity_score = len(matches) / max(len(des1), len(des2))
-    return similarity_score
-
-
-def identify_company(uploaded_image, sample_images):
-    uploaded_image = uploaded_image.convert('L').resize((100, 100))
-    uploaded_array = np.array(uploaded_image)
-    
-    best_match = None
-    highest_similarity = 0
-    
-    for company, images in sample_images.items():
-        for sample_img in images:
-            similarity = calculate_similarity(uploaded_array, sample_img)
-            if similarity > highest_similarity:
-                highest_similarity = similarity
-                best_match = company
-                
-    return best_match
-
-def get_common_issues(company):
-    return company_issues.get(company, ["No common issues found for this company."])
-def report_issue_by_image():
-    st.subheader("Report Issue by Image")
-
-    # Pre-load sample images once
-    if "sample_images" not in st.session_state:
-        st.session_state.sample_images = load_sample_images()
-    
-    # Image Upload Section
-    uploaded_file = st.file_uploader("Upload an image of the appliance", type=["jpg", "jpeg", "png"])
-    
-    # Clear previous state if a new image is uploaded
-    if uploaded_file:
-        if "last_uploaded_file" in st.session_state:
-            if st.session_state.last_uploaded_file != uploaded_file:
-                # Clear state related to the previous image
-                st.session_state.detected_appliance = None
-                st.session_state.issues = []
-                st.session_state.selected_issue = None
-                st.session_state.done_clicked = False
-        
-        # Save the current uploaded file to session state
-        st.session_state.last_uploaded_file = uploaded_file
-        
-        uploaded_image = Image.open(uploaded_file).convert('RGB')
-        st.image(uploaded_image, caption="Uploaded Image", use_container_width=True)
-
-        # Detect appliance and get possible issues
-        if st.button("Detect Appliance"):
-            appliance = identify_appliance(uploaded_image, st.session_state.sample_images)
-            st.session_state.detected_appliance = appliance
-            
-            if appliance != "Unknown Appliance":
-                st.session_state.issues = get_common_issues(appliance)
-            else:
-                st.session_state.issues = []
-        
-        # Display detection result if available
-        if "detected_appliance" in st.session_state:
-            appliance = st.session_state.detected_appliance
-            issues = st.session_state.issues
-            
-            if appliance != "Unknown Appliance":
-                st.success(f"Detected Appliance: {appliance.title()}")
-                
-                # Display dropdown of dynamically generated issues
-                if issues:
-                    # Store the selected issue in session state to persist across reruns
-                    if "selected_issue" not in st.session_state:
-                        st.session_state.selected_issue = issues[0]
-                    
-                    st.session_state.selected_issue = st.selectbox(
-                        "Select your issue:",
-                        options=issues,
-                        index=issues.index(st.session_state.selected_issue)
-                    )
-                    
-                    # "Done" button to confirm issue selection
-                    if st.button("Done"):
-                        st.session_state.done_clicked = True
-                
-                # Check if "Done" was clicked to avoid refreshing
-                if st.session_state.get("done_clicked", False):
-                    st.session_state.issue_description = st.session_state.selected_issue
-                    st.success(f"Issue '{st.session_state.selected_issue}' pasted into the description field.")
-                    st.info("You can now submit the issue.")
-            else:
-                st.error("Could not detect a relevant appliance. Please try another image.")
-"""
-"""
-def report_issue_by_image_1():
-    st.subheader("Report Issue by Image")
-
-    # Image Upload Section
-    uploaded_file = st.file_uploader("Upload an image of the appliance", type=["jpg", "jpeg", "png"])
-    
-    if uploaded_file is not None:
-        st.image(uploaded_file, caption="Uploaded Image", use_container_width=True)
-
-        # Detect appliance and get possible issues
-        if st.button("Detect Appliance"):
-            appliance, issues = detect_appliance(uploaded_file)
-            st.session_state.detected_appliance = appliance
-            st.session_state.issues = issues
-        
-        # Display detection result if available
-        if "detected_appliance" in st.session_state:
-            appliance = st.session_state.detected_appliance
-            issues = st.session_state.issues
-            
-            if appliance != "Unknown Appliance":
-                st.success(f"Detected Appliance: {appliance.title()}")
-                
-                # Display dropdown of possible issues
-                selected_issue = st.selectbox("Select your issue:", issues)
-                
-                # Confirm issue selection
-                if st.button("Done"):
-                    if selected_issue:
-                        st.session_state.issue_description = selected_issue
-                        st.info("You can now submit the issue.")
-            else:
-                st.error("Could not detect a relevant appliance. Please try another image.")
-
-# for the appliance detection
-sample_images = {
-    "ac": {
-        "images": ["download (1).jpg", "download.jpg"],
-        "issues": ["Water leakage from ac", "ac is not cooling", "Strange noise from ac"]
-    },
-}
-
-def calculate_similarity(img1, img2): # using correlation and numpy arrays
-    img1 = img1.resize((100, 100)).convert('L')
-    img2 = img2.resize((100, 100)).convert('L')
-    arr1 = np.array(img1).flatten()
-    arr2 = np.array(img2).flatten()
-    return np.corrcoef(arr1, arr2)[0, 1] 
-
-def detect_appliance(uploaded_image): # compares uploaded images with sample images
-    uploaded_img = Image.open(uploaded_image)
-
-    max_similarity = 0
-    detected_appliance = "Unknown Appliance"
-    possible_issues = []
-
-    for appliance, data in sample_images.items():
-        for sample in data["images"]:
-            sample_img = Image.open(sample)
-            similarity = calculate_similarity(uploaded_img, sample_img)
-            
-            if similarity > max_similarity and similarity > 0.7:  # Threshold for similarity
-                max_similarity = similarity
-                detected_appliance = appliance
-                possible_issues = data["issues"]
-
-    return detected_appliance, possible_issues
-"""
 ###################################################################################################
 # get worker issues
 def get_worker_issues(worker_id):

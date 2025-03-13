@@ -9,6 +9,7 @@ import plotly.express as px
 import io
 from PIL import Image
 
+
 # User reporting an issue.
 def report_issue():
     st.subheader("Report an Issue")
