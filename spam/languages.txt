@@ -1,0 +1,347 @@
+Malay:
+
+"Lampu saya tidak menyala" (My light is not turning on)
+
+Chinese:
+
+"我的水龙头漏水了" (My faucet is leaking)
+
+Tamil:
+
+"என் பம்ப் வேலை செய்யவில்லை" (My pump is not working)
+
+Twilo :
+KEHVKRKMH1WQGWZ76ZXN6623
+======================================================
+import streamlit as st
+import sqlite3
+import pandas as pd
+import plotly.express as px
+
+# Function to fetch pending & completed issues
+def fetch_issues():
+    conn = sqlite3.connect("issues.db")  # Update with your DB name
+    df = pd.read_sql_query("SELECT * FROM issues", conn)
+    conn.close()
+    return df
+
+# Function to mark an issue as resolved
+def mark_issue_resolved(issue_id):
+    conn = sqlite3.connect("issues.db")
+    cursor = conn.cursor()
+    
+    # Check if issue exists
+    cursor.execute("SELECT * FROM issues WHERE issue_id = ? AND status = 'pending'", (issue_id,))
+    issue = cursor.fetchone()
+    
+    if issue:
+        cursor.execute("UPDATE issues SET status = 'completed' WHERE issue_id = ?", (issue_id,))
+        conn.commit()
+        conn.close()
+        return f"Issue {issue_id} marked as resolved! ✅"
+    else:
+        conn.close()
+        return "Issue not found or already resolved."
+
+# Function to fetch issue stats for graph
+def fetch_issue_data():
+    conn = sqlite3.connect("issues.db")
+    query = """
+    SELECT 
+        DATE(created_at) AS date,
+        COUNT(*) AS raised,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed
+    FROM issues
+    GROUP BY DATE(created_at)
+    """
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+
+    df["pending"] = df["raised"] - df["completed"]
+    return df
+
+# Admin Dashboard
+def admin_dashboard():
+    st.title("Admin Dashboard - Issue Management")
+
+    # Admin Login
+    admin_password = st.text_input("Enter admin password:", type="password")
+    
+    if admin_password == "admin":  # Set a proper authentication method in production
+        st.success("Access granted ✅")
+
+        # Fetch issues
+        df = fetch_issues()
+
+        # **📌 Pending Issues**
+        st.subheader("Pending Issues")
+        pending_issues = df[df["status"] == "pending"]
+        
+        if pending_issues.empty:
+            st.write("No pending issues.")
+        else:
+            for _, issue in pending_issues.iterrows():
+                st.write(f"🔴 **Issue ID:** {issue['issue_id']}")
+                st.write(f"**Type:** {issue['type'].capitalize()}")
+                st.write(f"**Description:** {issue['description']}")
+                st.write(f"**Reported At:** {issue['created_at']}")
+                st.write("---")
+
+        # **✅ Completed Issues**
+        st.subheader("Completed Issues")
+        completed_issues = df[df["status"] == "completed"]
+        
+        if completed_issues.empty:
+            st.write("No completed issues.")
+        else:
+            for _, issue in completed_issues.iterrows():
+                st.write(f"✅ **Issue ID:** {issue['issue_id']}")
+                st.write(f"**Type:** {issue['type'].capitalize()}")
+                st.write(f"**Description:** {issue['description']}")
+                st.write("---")
+
+        # **🔧 Resolve an Issue**
+        st.subheader("Resolve a Specific Issue")
+        issue_list = pending_issues["issue_id"].tolist()
+
+        if issue_list:
+            issue_to_resolve = st.selectbox("Select an Issue ID to mark as resolved:", issue_list)
+
+            if st.button("Resolve Issue"):
+                response = mark_issue_resolved(issue_to_resolve)
+                st.success(response)
+                st.rerun()  # Refresh the page after resolving
+
+        else:
+            st.info("No pending issues to resolve.")
+
+        # **📊 Issues Tracking Graph**
+        st.subheader("Daily Issue Statistics")
+
+        df_graph = fetch_issue_data()
+        if not df_graph.empty:
+            fig = px.line(df_graph, 
+                        x="date", 
+                        y=["raised", "completed", "pending"], 
+                        labels={"value": "Number of Issues", "date": "Date"},
+                        title="Daily Issue Trends",
+                        markers=True)
+
+            fig.update_layout(legend_title="Issue Status")
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning("No issue data available.")
+
+    else:
+        st.error("Invalid admin password! 🚫")
+
+# Run Admin Dashboard
+admin_dashboard()
+
+======================================================
+Admin code:
+
+def resolve_issue():
+    st.subheader("Resolve an Issue")
+    admin_password = st.text_input("Enter admin password:", type="password")
+    
+    if admin_password == "admin":  # Change this to a secure password
+        st.success("Admin Logged In")
+        
+        # Display Pending Issues
+        st.subheader("Pending Issues")
+        pending_issues = session.query(Issue).filter_by(resolved=False).all()
+        
+        if not pending_issues:
+            st.write("No pending issues.")
+        else:
+            for issue in pending_issues:
+                st.write(f"🔴 **Issue ID:** {issue.issue_id}")
+                st.write(f"**Type:** {issue.type.capitalize()}")
+                st.write(f"**Description:** {issue.description}")
+                st.write(f"**Reported At:** {issue.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+                st.write("---")
+
+        # Display Completed Issues
+        st.subheader("Completed Issues")
+        completed_issues = session.query(Issue).filter_by(resolved=True).all()
+        
+        if not completed_issues:
+            st.write("No completed issues.")
+        else:
+            for issue in completed_issues:
+                st.write(f"✅ **Issue ID:** {issue.issue_id}")
+                st.write(f"**Type:** {issue.type.capitalize()}")
+                st.write(f"**Description:** {issue.description}")
+                st.write(f"**Resolved At:** {issue.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+                st.write("---")
+
+        # Allow Admin to Enter Issue ID for Resolution
+        st.subheader("Resolve a Specific Issue")
+        issue_to_resolve = st.text_input("Enter Issue ID to mark as resolved:")
+        if st.button("Resolve Issue"):
+            if issue_to_resolve:
+                response = mark_issue_resolved(issue_to_resolve)
+                st.success(response)
+                st.experimental_rerun()  # Refresh the page to update lists
+            else:
+                st.error("Please enter a valid Issue ID.")
+    else:
+        st.error("Invalid admin password!")
+===================================================
+Image part :
+
+import streamlit as st
+import openai
+import base64
+from PIL import Image
+import io
+import numpy as np
+
+# Set your OpenAI API Key
+openai.api_key = "your_openai_api_key_here"
+
+# List of known AC companies
+known_ac_companies = ["Daikin", "Mitsubishi", "Samsung", "LG", "Whirlpool", "Voltas", "Hitachi", "Panasonic"]
+
+def encode_image(image_bytes):
+    """Encodes image bytes to a base64 string for OpenAI API."""
+    return base64.b64encode(image_bytes).decode("utf-8")
+
+def extract_text_from_image(image_bytes):
+    """Uses OpenAI GPT-4o to extract text from an image."""
+    base64_image = encode_image(image_bytes)
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "Extract any readable brand name or text from the given image."},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Extract text from this image and return only the text:"},
+                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
+                ]
+            }
+        ],
+        max_tokens=300
+    )
+
+    return response["choices"][0]["message"]["content"]
+
+def identify_ac_company(extracted_text):
+    """Matches extracted text with known AC company names."""
+    for company in known_ac_companies:
+        if company.lower() in extracted_text.lower():
+            return company
+    return None  # No matching company found
+
+def get_image_embedding(image):
+    """Generate OpenAI image embedding for similarity comparison."""
+    buffered = io.BytesIO()
+    image.save(buffered, format="PNG")
+    image_bytes = buffered.getvalue()
+
+    response = openai.Embedding.create(
+        model="text-embedding-ada-002",
+        input=image_bytes
+    )
+    
+    return np.array(response['data'][0]['embedding'])
+
+def identify_company_by_image(uploaded_image, sample_images):
+    """Identify AC company using OpenAI embeddings if text extraction fails."""
+    uploaded_embedding = get_image_embedding(uploaded_image)
+
+    best_match = None
+    highest_similarity = 0.0
+
+    for company, sample_image in sample_images.items():
+        sample_embedding = get_image_embedding(sample_image)
+        similarity = np.dot(uploaded_embedding, sample_embedding) / (np.linalg.norm(uploaded_embedding) * np.linalg.norm(sample_embedding))
+
+        if similarity > highest_similarity:
+            highest_similarity = similarity
+            best_match = company
+
+    return best_match if highest_similarity > 0.7 else "Unknown"
+
+def get_common_issues(company):
+    """Generates common issues dynamically for the detected AC brand using OpenAI."""
+    prompt = f"List 5 common issues for {company} air conditioners with a short description. Format: 'Issue Name - Description' (e.g., 'Not Cooling - AC is running but not cooling properly')."
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ],
+        max_tokens=200
+    )
+
+    issues_text = response["choices"][0]["message"]["content"]
+    issues = [issue.strip() for issue in issues_text.split("\n") if issue]
+
+    return issues if issues else ["No common issues found."]
+
+
+def report_issue_by_image():
+    st.subheader("Report AC Issue by Image")
+
+    uploaded_file = st.file_uploader("Upload an image of the AC", type=["jpg", "jpeg", "png"])
+
+    if uploaded_file:
+        if "last_uploaded_file" in st.session_state and st.session_state.last_uploaded_file != uploaded_file:
+            st.session_state.detected_appliance = None
+            st.session_state.issues = []
+            st.session_state.selected_issue = None
+            st.session_state.done_clicked = False
+
+        st.session_state.last_uploaded_file = uploaded_file
+
+        uploaded_image = Image.open(uploaded_file).convert("RGB")
+        st.image(uploaded_image, caption="Uploaded Image", use_container_width=True)
+
+        if st.button("Detect Appliance"):
+            img_bytes = io.BytesIO()
+            uploaded_image.save(img_bytes, format="PNG")
+            extracted_text = extract_text_from_image(img_bytes.getvalue())
+
+            appliance = identify_ac_company(extracted_text)
+
+            st.session_state.detected_appliance = appliance if appliance else "Unknown"
+            st.session_state.issues = get_common_issues(appliance) if appliance else []
+            st.session_state.selected_issue = None  # Reset issue selection
+
+        if "detected_appliance" in st.session_state and st.session_state.detected_appliance:
+            appliance = st.session_state.detected_appliance
+            issues = st.session_state.issues
+
+            if appliance != "Unknown":
+                st.success(f"Detected AC Brand: {appliance}")
+
+                if issues:
+                    if st.session_state.selected_issue not in issues:
+                        st.session_state.selected_issue = issues[0]
+
+                    selected_issue_full = st.selectbox(
+                        "Select your issue:",
+                        options=issues,
+                        index=issues.index(st.session_state.selected_issue) if st.session_state.selected_issue in issues else 0
+                    )
+
+                    # ✅ Extract only the issue name before storing
+                    selected_issue_name = selected_issue_full.split(" - ")[0]
+
+                    if st.button("Done"):
+                        st.session_state.done_clicked = True
+                        st.session_state.selected_issue = selected_issue_name
+
+                if st.session_state.get("done_clicked", False):
+                    issue_text = f"{appliance} AC - {st.session_state.selected_issue}"
+                    st.session_state.issue_description = issue_text
+                    st.success(f"Issue '{st.session_state.selected_issue}' pasted into the description field.")
+                    st.info("You can now submit the issue.")
+
+            else:
+                st.error("Could not identify the AC brand. Please try another image.")
