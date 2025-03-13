@@ -13,7 +13,7 @@ import uuid
 import sqlite3
 import plotly.express as px
 import os
-import cv2
+# import cv2
 import re 
 import base64
 import numpy as np
