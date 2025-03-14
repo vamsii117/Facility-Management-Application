@@ -375,47 +375,13 @@ TRANSLATE_MAP = {
     "Tamil": "ta"
 }
 from streamlit_js_eval import streamlit_js_eval
-
 def speech_to_text(language):
-    """Uses browser-based speech recognition and returns detected speech."""
+    """Uses browser-based speech recognition and returns text output."""
     language_code = LANGUAGE_MAP.get(language, "en-US")
 
     try:
         spoken_text = streamlit_js_eval(
-    js_expressions=f"""
-    new Promise((resolve) => {{
-        console.log("Starting speech recognition...");
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = '{language_code}';
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-
-        recognition.onresult = (event) => {{
-            const transcript = event.results[0][0].transcript;
-            console.log("Speech detected:", transcript);
-            alert(transcript); // 🛑 Debug: Show transcript in an alert box
-            resolve(transcript);
-        }};
-
-        recognition.onerror = (event) => {{
-            console.error("Speech Recognition Error:", event.error);
-            resolve(""); 
-        }};
-        
-        recognition.onspeechend = () => {{
-            console.log("Speech ended.");
-            recognition.stop();
-        }};
-        
-        recognition.start();
-    }})
-    """,
-    want_output=True
-)
-
-        """
-        spoken_text = streamlit_js_eval(
-            js_expressions=f
+            js_expressions=f"""
             new Promise((resolve) => {{
                 console.log("Starting speech recognition...");
                 const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -426,12 +392,12 @@ def speech_to_text(language):
                 recognition.onresult = (event) => {{
                     const transcript = event.results[0][0].transcript;
                     console.log("Speech detected:", transcript);
-                    resolve(transcript); // ✅ Ensure resolve sends back the transcript
+                    resolve(transcript);  // Ensure this resolves the text
                 }};
                 
                 recognition.onerror = (event) => {{
                     console.error("Speech Recognition Error:", event.error);
-                    resolve(""); // ✅ Return an empty string instead of unresolved promise
+                    resolve("");  // Return an empty string on error
                 }};
                 
                 recognition.onspeechend = () => {{
@@ -441,21 +407,19 @@ def speech_to_text(language):
                 
                 recognition.start();
             }})
-            ,
+            """,
             want_output=True
         )
-        """
 
-        if spoken_text:
-            print(f"🎙️ Recognized Speech: {spoken_text}")  # Debugging log
+        if spoken_text and spoken_text.strip():  
             return spoken_text.strip()
         else:
-            print("⚠️ No speech detected or error occurred.")
-            return None  # Return None if speech was not detected
+            return None  
 
     except Exception as e:
         print(f"⚠️ Speech recognition failed: {e}")
-        return None  # Fail gracefully
+        return None  
+
 
 def translate_to_english(text, source_lang, detect_only=False):
     """Translate text to English or detect language."""
