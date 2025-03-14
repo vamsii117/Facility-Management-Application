@@ -8,8 +8,71 @@ import re
 import plotly.express as px
 import io
 from PIL import Image
+def report_issue():
+    st.subheader("Report an Issue")
+    user_identifier = st.text_input("Enter your username (in English):", key="report_user")
+    language = st.selectbox("Choose your language:", ["English", "Malay", "Chinese", "Tamil"], key="language_select")
+
+    # Initialize session state for issue description
+    if "issue_description" not in st.session_state:
+        st.session_state.issue_description = ""
+
+    # Button for Speech-to-Text
+    if st.button("🎤 Speak instead"):
+        st.write("Listening...")
+        spoken_text = speech_to_text(language)  # Get spoken text
+        if spoken_text:
+            st.session_state.issue_description = spoken_text  # Save to session state
+        else:
+            st.warning("No speech detected. Please try again.")
+
+    # Use session state to persist description
+    issue_description = st.text_area("Describe your issue:", value=st.session_state.issue_description, key="issue_description_input")
+
+    # Language validation
+    if issue_description and language != "English":
+        detected_language = translate_to_english(issue_description, language, detect_only=True)
+        if detected_language != language:
+            st.error(f"Please provide the input in the chosen language: {language}")
+            return
+
+    if st.button("Submit Issue", key="submit_issue_button"):
+        if user_identifier and issue_description:
+            translated_issue = translate_to_english(issue_description, language)  # Translate issue to English
+            issue_type = categorize_issue(translated_issue)  # Categorize issue
+            issue_type = re.sub(r'[^a-zA-Z]', '', issue_type).strip().lower()  
+
+            st.write(f"Issue categorized as: {issue_type}")
+
+            # Check for existing ticket or create a new one
+            existing_ticket = session.query(Ticket).filter_by(user_identifier=user_identifier, status='open').first()
+            if existing_ticket:
+                ticket_id = existing_ticket.ticket_id
+            else:
+                ticket_id = str(uuid.uuid4())
+                new_ticket = Ticket(ticket_id=ticket_id, user_identifier=user_identifier)
+                session.add(new_ticket)
+                session.commit()
+
+            # Assign worker based on issue type and user
+            assigned_worker_id, assigned_worker_name = assign_worker(issue_type, user_identifier, translated_issue)
+
+            # Create a new issue record
+            new_issue = Issue(
+                ticket_id=ticket_id,
+                type=issue_type,
+                description=translated_issue,
+                assigned_worker_id=assigned_worker_id
+            )
+            session.add(new_issue)
+            session.commit()
+
+            st.write(f"Assigned Worker: {assigned_worker_name}")
+        else:
+            st.error("Please fill in all fields.")
 
 
+"""
 # User reporting an issue.
 def report_issue():
     st.subheader("Report an Issue")
@@ -39,6 +102,7 @@ def report_issue():
             st.error(f"Please provide the input in the chosen language: {language}")
             return
     """
+    """
     if st.button("🎤 Speak instead"): # for the speech to text implementation
         spoken_text = speech_to_text(language)
         if spoken_text:
@@ -46,6 +110,8 @@ def report_issue():
         else:
             st.warning("No speech detected. Please try again.")
     issue_description = st.text_area("Describe your issue:", value=st.session_state.issue_description, key="issue_description_input")
+    """
+    """
     """
     """
     #language validation new
@@ -58,12 +124,15 @@ def report_issue():
             return  
     """
     """
+    """
+    """
     # language validation old
     if issue_description and language != "English":  
         detected_language = translate_to_english(issue_description, language, detect_only=True)
         if detected_language != language:
             st.error(f"Please provide the input in the chosen language: {language}")
             return  
+    """
     """
     if st.button("Submit Issue", key="submit_issue_button"):
         if user_identifier and issue_description:
@@ -99,7 +168,7 @@ def report_issue():
             st.write(f"Assigned Worker: {assigned_worker_name}")
         else:
             st.error("Please fill in all fields.")
-
+"""
 def check_ticket_status():
     st.subheader("Check Ticket Status")
     user_identifier_status = st.text_input("Enter your Username/Email to check status:")
