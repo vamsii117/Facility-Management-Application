@@ -22,8 +22,8 @@ def report_issue():
     # Speech-to-text button
     if st.button("🎤 Speak instead", key="speak_button"):
         st.write("Listening...")
-        spoken_text = speech_to_text()
-        if spoken_text and spoken_text != "Speech recognition not supported":
+        spoken_text = speech_to_text(language)
+        if spoken_text:
             st.session_state.issue_description = spoken_text
         else:
             st.warning("No speech detected. Please try again.")
@@ -36,12 +36,11 @@ def report_issue():
             st.warning("No speech detected. Please try again.")
     """
     issue_description = st.text_area("Describe your issue:", value=st.session_state.issue_description, key="issue_description_input")
+    #language validation
     if issue_description and language != "English":  
         detected_language = translate_to_english(issue_description, language, detect_only=True)
-    
         print(f"User Input: {issue_description}")
         print(f"Detected Language: {detected_language}, Selected: {language}")  # Debugging
-    
         if detected_language != language:
             st.error(f"Please provide the input in the chosen language: {language}")
             return  
@@ -53,7 +52,7 @@ def report_issue():
         if detected_language != language:
             st.error(f"Please provide the input in the chosen language: {language}")
             return  
-"""
+    """
     if st.button("Submit Issue", key="submit_issue_button"):
         if user_identifier and issue_description:
             translated_issue = translate_to_english(issue_description, language)  # Translate issue to English
