@@ -22,12 +22,13 @@ def report_issue():
         st.write("Listening...")
         spoken_text = speech_to_text(language)  # Get spoken text
         if spoken_text:
-            st.session_state.issue_description = spoken_text  # Save to session state
+            st.write(spoken_text)
+            #st.session_state.issue_description = spoken_text  # Save to session state
         else:
             st.warning("No speech detected. Please try again.")
 
     # Use session state to persist description
-    issue_description = st.text_area("Describe your issue:", value=st.session_state.issue_description, key="issue_description_input")
+    #issue_description = st.text_area("Describe your issue:", value=st.session_state.issue_description, key="issue_description_input")
 
     # Language validation
     if issue_description and language != "English":
