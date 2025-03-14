@@ -8,6 +8,8 @@ fastapi
 uvicorn
 python-dotenv
 speechrecognition
-googletrans
-#pyaudio
+googletrans==4.0.0-rc1
 streamlit_js_eval
+#googletrans
+#pyaudio
+#streamlit_js_eval
