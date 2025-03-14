@@ -357,14 +357,13 @@ def resolve_worker_issue(issue_id, worker_id):
     session.commit()
     return f"Issue {issue_id} resolved. Additional issue merged under the same worker {worker_id}."
 
-
 import streamlit as st
 from streamlit_js_eval import streamlit_js_eval
 from googletrans import Translator
 
 # Language Mapping
 LANGUAGE_MAP = {
-    "English": "en",
+    "English": "en-US",
     "Chinese": "zh-CN",
     "Malay": "ms-MY",
     "Tamil": "ta-IN"
@@ -382,15 +381,27 @@ def speech_to_text(language):
 
     spoken_text = streamlit_js_eval(js_expressions=f"""
         new Promise((resolve) => {{
+            console.log("Starting speech recognition...");
             const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             recognition.lang = '{language_code}';
             recognition.interimResults = false;
             recognition.maxAlternatives = 1;
 
-            recognition.onresult = (event) => resolve(event.results[0][0].transcript);
-            recognition.onerror = (event) => resolve("");
-            recognition.onspeechend = () => recognition.stop();
-
+            recognition.onresult = (event) => {{
+                console.log("Speech detected:", event.results[0][0].transcript);
+                resolve(event.results[0][0].transcript);
+            }};
+            
+            recognition.onerror = (event) => {{
+                console.error("Speech Recognition Error:", event.error);
+                resolve("");
+            }};
+            
+            recognition.onspeechend = () => {{
+                console.log("Speech ended.");
+                recognition.stop();
+            }};
+            
             recognition.start();
         }})
     """, want_output=True)
