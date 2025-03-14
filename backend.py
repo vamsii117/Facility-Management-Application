@@ -357,6 +357,73 @@ def resolve_worker_issue(issue_id, worker_id):
     session.commit()
     return f"Issue {issue_id} resolved. Additional issue merged under the same worker {worker_id}."
 
+
+import streamlit as st
+from streamlit_js_eval import streamlit_js_eval
+from googletrans import Translator
+
+# Language Mapping
+LANGUAGE_MAP = {
+    "English": "en",
+    "Chinese": "zh-CN",
+    "Malay": "ms-MY",
+    "Tamil": "ta-IN"
+}
+
+TRANSLATE_MAP = {
+    "Chinese": "zh-cn",
+    "Malay": "ms",
+    "Tamil": "ta"
+}
+
+def speech_to_text(language):
+    """Use browser-based speech recognition for real-time input."""
+    language_code = LANGUAGE_MAP.get(language, "en-US")
+
+    spoken_text = streamlit_js_eval(js_expressions=f"""
+        new Promise((resolve) => {{
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = '{language_code}';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onresult = (event) => resolve(event.results[0][0].transcript);
+            recognition.onerror = (event) => resolve("");
+            recognition.onspeechend = () => recognition.stop();
+
+            recognition.start();
+        }})
+    """, want_output=True)
+
+    return spoken_text if spoken_text else None
+
+def translate_to_english(text, source_lang, detect_only=False):
+    """Translate text to English or detect language."""
+    if source_lang == "English":  
+        return text
+
+    try:
+        translator = Translator()
+        detected_lang = translator.detect(text).lang  
+        normalized_lang = detected_lang.split('-')[0]  
+
+        language_map = {
+            "ms": "Malay",
+            "id": "Malay",  
+            "zh": "Chinese",
+            "ta": "Tamil"
+        }
+
+        if detect_only:
+            return language_map.get(normalized_lang, "English")
+
+        translated_text = translator.translate(text, src=TRANSLATE_MAP.get(source_lang, "en"), dest="en").text
+        return translated_text
+    except Exception as e:
+        print(f"Translation failed: {e}")
+        return text  
+
+"""
 # language support code
 LANGUAGE_MAP = {
     "English": "en",
@@ -426,7 +493,8 @@ def translate_to_english(text, source_lang, detect_only=False):
         return text  # Return original if translation fails
 
 
-"""
+
+main
 #using google speech recognition
 def speech_to_text(language='en', timeout=5):
     recognizer = sr.Recognizer()
