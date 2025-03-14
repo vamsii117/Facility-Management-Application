@@ -28,14 +28,24 @@ def report_issue():
             st.warning("No speech detected. Please try again.")
     
     issue_description = st.text_area("Describe your issue:", value=st.session_state.issue_description, key="issue_description_input")
+    if issue_description and language != "English":  
+        detected_language = translate_to_english(issue_description, language, detect_only=True)
     
+        print(f"User Input: {issue_description}")
+        print(f"Detected Language: {detected_language}, Selected: {language}")  # Debugging
+    
+        if detected_language != language:
+            st.error(f"Please provide the input in the chosen language: {language}")
+            return  
+
+    """
     # language validation
     if issue_description and language != "English":  
         detected_language = translate_to_english(issue_description, language, detect_only=True)
         if detected_language != language:
             st.error(f"Please provide the input in the chosen language: {language}")
             return  
-
+"""
     if st.button("Submit Issue"):
         if user_identifier and issue_description:
             translated_issue = translate_to_english(issue_description, language)  # Translate issue to English
