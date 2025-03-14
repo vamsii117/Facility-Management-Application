@@ -382,7 +382,40 @@ def speech_to_text(language):
 
     try:
         spoken_text = streamlit_js_eval(
-            js_expressions=f"""
+    js_expressions=f"""
+    new Promise((resolve) => {{
+        console.log("Starting speech recognition...");
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = '{language_code}';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onresult = (event) => {{
+            const transcript = event.results[0][0].transcript;
+            console.log("Speech detected:", transcript);
+            alert(transcript); // 🛑 Debug: Show transcript in an alert box
+            resolve(transcript);
+        }};
+
+        recognition.onerror = (event) => {{
+            console.error("Speech Recognition Error:", event.error);
+            resolve(""); 
+        }};
+        
+        recognition.onspeechend = () => {{
+            console.log("Speech ended.");
+            recognition.stop();
+        }};
+        
+        recognition.start();
+    }})
+    """,
+    want_output=True
+)
+
+        """
+        spoken_text = streamlit_js_eval(
+            js_expressions=f
             new Promise((resolve) => {{
                 console.log("Starting speech recognition...");
                 const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -408,9 +441,10 @@ def speech_to_text(language):
                 
                 recognition.start();
             }})
-            """,
+            ,
             want_output=True
         )
+        """
 
         if spoken_text:
             print(f"🎙️ Recognized Speech: {spoken_text}")  # Debugging log
