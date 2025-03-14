@@ -14,23 +14,20 @@ from PIL import Image
 def report_issue():
     st.subheader("Report an Issue")
     user_identifier = st.text_input("Enter your username (in English):", key="report_user")
-    
     language = st.selectbox("Choose your language:", ["English", "Malay", "Chinese", "Tamil"], key="language_select")
     
-    if "issue_description" not in st.session_state: # used to store data througout an interaction span
+    if "issue_description" not in st.session_state:
         st.session_state.issue_description = ""
-    
-    # Speech-to-text button
+
     if st.button("🎤 Speak instead"):
         st.write("Listening...")
         spoken_text = speech_to_text(language)
         if spoken_text:
-            st.write(f"Recognized Speech: {spoken_text}")  # Debugging output
             st.session_state.issue_description = spoken_text
+            st.experimental_rerun()  # Force UI update
         else:
             st.warning("No speech detected. Please try again.")
 
-    # Text input field (shows speech-to-text result if available)
     issue_description = st.text_area("Describe your issue:", value=st.session_state.issue_description, key="issue_description_input")
 
     # Language validation
