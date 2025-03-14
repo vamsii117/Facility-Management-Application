@@ -19,13 +19,16 @@ def report_issue():
 
     # Button for Speech-to-Text
     if st.button("🎤 Speak instead"):
-        st.write("Listening...")
-        spoken_text = speech_to_text(language)  # Get spoken text
-        if spoken_text:
-            st.write(spoken_text)
-            #st.session_state.issue_description = spoken_text  # Save to session state
-        else:
-            st.warning("No speech detected. Please try again.")
+    st.write("Listening...")
+    spoken_text = speech_to_text(language)  # Get spoken text
+    
+    # Debugging output
+    st.write(f"Debug: Speech Output = {spoken_text}")
+
+    if spoken_text:
+        st.session_state.issue_description = spoken_text  # Save to session state
+    else:
+        st.warning("No speech detected. Please try again.")
 
     # Use session state to persist description
     #issue_description = st.text_area("Describe your issue:", value=st.session_state.issue_description, key="issue_description_input")
