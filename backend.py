@@ -374,8 +374,10 @@ TRANSLATE_MAP = {
     "Malay": "ms",
     "Tamil": "ta"
 }
+from streamlit_js_eval import streamlit_js_eval
+
 def speech_to_text(language):
-    """Uses browser-based speech recognition."""
+    """Uses browser-based speech recognition and returns detected speech."""
     language_code = LANGUAGE_MAP.get(language, "en-US")
 
     try:
@@ -389,13 +391,14 @@ def speech_to_text(language):
                 recognition.maxAlternatives = 1;
 
                 recognition.onresult = (event) => {{
-                    console.log("Speech detected:", event.results[0][0].transcript);
-                    resolve(event.results[0][0].transcript);
+                    const transcript = event.results[0][0].transcript;
+                    console.log("Speech detected:", transcript);
+                    resolve(transcript); // ✅ Ensure resolve sends back the transcript
                 }};
                 
                 recognition.onerror = (event) => {{
                     console.error("Speech Recognition Error:", event.error);
-                    resolve("ERROR");
+                    resolve(""); // ✅ Return an empty string instead of unresolved promise
                 }};
                 
                 recognition.onspeechend = () => {{
@@ -409,7 +412,7 @@ def speech_to_text(language):
             want_output=True
         )
 
-        if spoken_text and spoken_text != "ERROR":
+        if spoken_text:
             print(f"🎙️ Recognized Speech: {spoken_text}")  # Debugging log
             return spoken_text.strip()
         else:
