@@ -19,14 +19,26 @@ def report_issue():
     
     if "issue_description" not in st.session_state: # used to store data througout an interaction span
         st.session_state.issue_description = ""
+    
     # Speech-to-text button
-    if st.button("🎤 Speak instead", key="speak_button"):
+    if st.button("🎤 Speak instead"):
         st.write("Listening...")
         spoken_text = speech_to_text(language)
         if spoken_text:
+            st.write(f"Recognized Speech: {spoken_text}")  # Debugging output
             st.session_state.issue_description = spoken_text
         else:
             st.warning("No speech detected. Please try again.")
+
+    # Text input field (shows speech-to-text result if available)
+    issue_description = st.text_area("Describe your issue:", value=st.session_state.issue_description, key="issue_description_input")
+
+    # Language validation
+    if issue_description and language != "English":
+        detected_language = translate_to_english(issue_description, language, detect_only=True)
+        if detected_language != language:
+            st.error(f"Please provide the input in the chosen language: {language}")
+            return
     """
     if st.button("🎤 Speak instead"): # for the speech to text implementation
         spoken_text = speech_to_text(language)
@@ -34,9 +46,10 @@ def report_issue():
             st.session_state.issue_description = spoken_text
         else:
             st.warning("No speech detected. Please try again.")
-    """
     issue_description = st.text_area("Describe your issue:", value=st.session_state.issue_description, key="issue_description_input")
-    #language validation
+    """
+    """
+    #language validation new
     if issue_description and language != "English":  
         detected_language = translate_to_english(issue_description, language, detect_only=True)
         print(f"User Input: {issue_description}")
@@ -44,9 +57,9 @@ def report_issue():
         if detected_language != language:
             st.error(f"Please provide the input in the chosen language: {language}")
             return  
-
     """
-    # language validation
+    """
+    # language validation old
     if issue_description and language != "English":  
         detected_language = translate_to_english(issue_description, language, detect_only=True)
         if detected_language != language:
