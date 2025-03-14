@@ -580,7 +580,7 @@ def translate_to_english(text, source_lang, detect_only=False):
     except Exception as e:
         print(f"Translation failed: {e}")
         return text  # Return original text if translation fails
-
+'''
 # Categorize issue using OpenAI
 def categorize_issue(description):
     client = openai.Client()
@@ -592,7 +592,17 @@ def categorize_issue(description):
         ]
     )
     return response.choices[0].message.content.strip().lower()
-
+'''
+def categorize_issue(description):
+    response = openai.ChatCompletion.create(  # No need for openai.Client()
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant that categorizes facility issues."},
+            {"role": "user", "content": f"Categorize this issue: {description}. Options: electrical, plumbing, other. Respond only with one of these options."}
+        ]
+    )
+    return response["choices"][0]["message"]["content"].strip().lower()
+    
 def check_ticket_status_by_user(user_identifier):
     tickets = session.query(Ticket).filter_by(user_identifier=user_identifier).all()
     
