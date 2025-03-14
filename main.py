@@ -19,14 +19,22 @@ def report_issue():
     
     if "issue_description" not in st.session_state: # used to store data througout an interaction span
         st.session_state.issue_description = ""
-    
+    # Speech-to-text button
+    if st.button("🎤 Speak instead", key="speak_button"):
+        st.write("Listening...")
+        spoken_text = speech_to_text()
+        if spoken_text and spoken_text != "Speech recognition not supported":
+            st.session_state.issue_description = spoken_text
+        else:
+            st.warning("No speech detected. Please try again.")
+    """
     if st.button("🎤 Speak instead"): # for the speech to text implementation
         spoken_text = speech_to_text(language)
         if spoken_text:
             st.session_state.issue_description = spoken_text
         else:
             st.warning("No speech detected. Please try again.")
-    
+    """
     issue_description = st.text_area("Describe your issue:", value=st.session_state.issue_description, key="issue_description_input")
     if issue_description and language != "English":  
         detected_language = translate_to_english(issue_description, language, detect_only=True)
@@ -46,7 +54,7 @@ def report_issue():
             st.error(f"Please provide the input in the chosen language: {language}")
             return  
 """
-    if st.button("Submit Issue"):
+    if st.button("Submit Issue", key="submit_issue_button"):
         if user_identifier and issue_description:
             translated_issue = translate_to_english(issue_description, language)  # Translate issue to English
             issue_type = categorize_issue(translated_issue)  # Categorize in using open ai
