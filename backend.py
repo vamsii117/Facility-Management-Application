@@ -374,73 +374,81 @@ TRANSLATE_MAP = {
     "Malay": "ms",
     "Tamil": "ta"
 }
-
 def speech_to_text(language):
     """Uses browser-based speech recognition."""
     language_code = LANGUAGE_MAP.get(language, "en-US")
 
-    # Call JavaScript and store the output
-    spoken_text = streamlit_js_eval(
-        js_expressions=f"""
-        new Promise((resolve) => {{
-            console.log("Starting speech recognition...");
-            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = '{language_code}';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
+    try:
+        spoken_text = streamlit_js_eval(
+            js_expressions=f"""
+            new Promise((resolve) => {{
+                console.log("Starting speech recognition...");
+                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.lang = '{language_code}';
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
 
-            recognition.onresult = (event) => {{
-                console.log("Speech detected:", event.results[0][0].transcript);
-                resolve(event.results[0][0].transcript);
-            }};
-            
-            recognition.onerror = (event) => {{
-                console.error("Speech Recognition Error:", event.error);
-                resolve("");
-            }};
-            
-            recognition.onspeechend = () => {{
-                console.log("Speech ended.");
-                recognition.stop();
-            }};
-            
-            recognition.start();
-        }})
-        """,
-        want_output=True
-    )
+                recognition.onresult = (event) => {{
+                    console.log("Speech detected:", event.results[0][0].transcript);
+                    resolve(event.results[0][0].transcript);
+                }};
+                
+                recognition.onerror = (event) => {{
+                    console.error("Speech Recognition Error:", event.error);
+                    resolve("ERROR");
+                }};
+                
+                recognition.onspeechend = () => {{
+                    console.log("Speech ended.");
+                    recognition.stop();
+                }};
+                
+                recognition.start();
+            }})
+            """,
+            want_output=True
+        )
 
-    if spoken_text:
-        print(f"🎙️ Recognized Speech: {spoken_text}")  # Debugging log
-        return spoken_text
-    else:
-        return None
+        if spoken_text and spoken_text != "ERROR":
+            print(f"🎙️ Recognized Speech: {spoken_text}")  # Debugging log
+            return spoken_text.strip()
+        else:
+            print("⚠️ No speech detected or error occurred.")
+            return None  # Return None if speech was not detected
+
+    except Exception as e:
+        print(f"⚠️ Speech recognition failed: {e}")
+        return None  # Fail gracefully
 
 def translate_to_english(text, source_lang, detect_only=False):
     """Translate text to English or detect language."""
     if source_lang == "English":  
-        return text
+        return text  # No need to translate
 
     try:
         translator = Translator()
-        detected_lang = translator.detect(text).lang  
-        normalized_lang = detected_lang.split('-')[0]  
+
+        # Detect language (useful if detect_only=True)
+        detected_lang = translator.detect(text).lang if text.strip() else "en"
+        normalized_lang = detected_lang.split('-')[0]  # Normalize (e.g., "zh-TW" → "zh")
 
         language_map = {
             "ms": "Malay",
-            "id": "Malay",  
             "zh": "Chinese",
             "ta": "Tamil"
         }
 
         if detect_only:
-            return language_map.get(normalized_lang, "English")
+            return language_map.get(normalized_lang, "English")  # Return detected language name
 
+        # Translate text
         translated_text = translator.translate(text, src=TRANSLATE_MAP.get(source_lang, "en"), dest="en").text
-        return translated_text
+        return translated_text if translated_text else text  # If translation fails, return original text
+
     except Exception as e:
-        print(f"Translation failed: {e}")
-        return text  
+        print(f"⚠️ Translation failed: {e}")
+        return text  # Return original text on failure
+ 
 
 """
 # language support code
