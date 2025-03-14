@@ -9,4 +9,4 @@ uvicorn
 python-dotenv
 speechrecognition
 googletrans
-#pyaudio
+pyaudio
