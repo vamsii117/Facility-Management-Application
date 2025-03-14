@@ -31,7 +31,7 @@ def report_issue():
         st.warning("No speech detected. Please try again.")
 
     # Use session state to persist description
-    #issue_description = st.text_area("Describe your issue:", value=st.session_state.issue_description, key="issue_description_input")
+    issue_description = st.text_area("Describe your issue:", value=st.session_state.issue_description, key="issue_description_input")
 
     # Language validation
     if issue_description and language != "English":
