@@ -361,7 +361,7 @@ import streamlit as st
 from streamlit_js_eval import streamlit_js_eval
 from googletrans import Translator
 
-# Language Mapping
+# 🌍 Language Mapping for Speech Recognition
 LANGUAGE_MAP = {
     "English": "en-US",
     "Chinese": "zh-CN",
@@ -374,7 +374,7 @@ TRANSLATE_MAP = {
     "Malay": "ms",
     "Tamil": "ta"
 }
-from streamlit_js_eval import streamlit_js_eval
+
 def speech_to_text(language):
     """Uses browser-based speech recognition and returns text output."""
     language_code = LANGUAGE_MAP.get(language, "en-US")
@@ -411,15 +411,11 @@ def speech_to_text(language):
             want_output=True
         )
 
-        if spoken_text and spoken_text.strip():  
-            return spoken_text.strip()
-        else:
-            return None  
+        return spoken_text.strip() if spoken_text else None  # Return speech result or None
 
     except Exception as e:
         print(f"⚠️ Speech recognition failed: {e}")
-        return None  
-
+        return None  # Handle failure gracefully
 
 def translate_to_english(text, source_lang, detect_only=False):
     """Translate text to English or detect language."""
