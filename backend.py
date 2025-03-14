@@ -374,19 +374,23 @@ from streamlit_js_eval import streamlit_js_eval
 
 def speech_to_text():
     spoken_text = streamlit_js_eval(
-        js_expressions="""window.SpeechRecognition || window.webkitSpeechRecognition 
-        ? new Promise((resolve) => { 
+        js_expressions="""
+        new Promise((resolve) => { 
             const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); 
             recognition.lang = 'en-US'; 
+            recognition.interimResults = false; 
+            recognition.maxAlternatives = 1; 
+            recognition.continuous = false; 
             recognition.onresult = (event) => resolve(event.results[0][0].transcript); 
+            recognition.onerror = (event) => resolve(""); 
+            recognition.onspeechend = () => recognition.stop(); 
             recognition.start(); 
-        }) 
-        : 'Speech recognition not supported'""",
+        })
+        """,
         want_output=True
     )
-    
-    return spoken_text if spoken_text else "Speech recognition not supported"
 
+    return spoken_text if spoken_text else "Speech recognition not supported"
 
 # Translate function with detection option
 def translate_to_english(text, source_lang, detect_only=False):
