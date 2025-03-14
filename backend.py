@@ -452,7 +452,7 @@ from streamlit_js_eval import streamlit_js_eval
 
 def speech_to_text():
     spoken_text = streamlit_js_eval(
-        js_expressions="""
+        js_expressions=
         new Promise((resolve) => { 
             const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); 
             recognition.lang = 'en-US'; 
@@ -464,7 +464,6 @@ def speech_to_text():
             recognition.onspeechend = () => recognition.stop(); 
             recognition.start(); 
         })
-        """,
         want_output=True
     )
 
