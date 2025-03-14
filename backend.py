@@ -419,8 +419,9 @@ def speech_to_text(language):
     except Exception as e:
         print(f"❌ Speech recognition failed: {e}")
         return None  
+        """
 def translate_to_english(text, source_lang, detect_only=False):
-    """Translate text to English or detect language."""
+    Translate text to English or detect language.
     if source_lang == "English":  
         return text  # No need to translate
 
@@ -450,6 +451,7 @@ def translate_to_english(text, source_lang, detect_only=False):
  
 
 """
+        """
 # language support code
 LANGUAGE_MAP = {
     "English": "en",
@@ -483,7 +485,8 @@ def speech_to_text():
     )
 
     return spoken_text if spoken_text else "Speech recognition not supported"
-
+"""
+        """
 # Translate function with detection option
 def translate_to_english(text, source_lang, detect_only=False):
     if source_lang == "English":  # No translation needed
@@ -516,11 +519,13 @@ def translate_to_english(text, source_lang, detect_only=False):
     except Exception as e:
         print(f"Translation failed: {e}")
         return text  # Return original if translation fails
+"""
 
 
 
-main
+#main
 #using google speech recognition
+"""
 def speech_to_text(language='en', timeout=5):
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
@@ -539,7 +544,7 @@ def speech_to_text(language='en', timeout=5):
             return None  
     
     return None
-
+"""
 def translate_to_english(text, source_lang, detect_only=False):
     if source_lang == "English":  # No translation needed
         return text
@@ -575,7 +580,7 @@ def translate_to_english(text, source_lang, detect_only=False):
     except Exception as e:
         print(f"Translation failed: {e}")
         return text  # Return original text if translation fails
-"""
+
 # Categorize issue using OpenAI
 def categorize_issue(description):
     client = openai.Client()
