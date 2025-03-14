@@ -376,10 +376,12 @@ TRANSLATE_MAP = {
 }
 
 def speech_to_text(language):
-    """Use browser-based speech recognition for real-time input."""
+    """Uses browser-based speech recognition."""
     language_code = LANGUAGE_MAP.get(language, "en-US")
 
-    spoken_text = streamlit_js_eval(js_expressions=f"""
+    # Call JavaScript and store the output
+    spoken_text = streamlit_js_eval(
+        js_expressions=f"""
         new Promise((resolve) => {{
             console.log("Starting speech recognition...");
             const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -404,9 +406,15 @@ def speech_to_text(language):
             
             recognition.start();
         }})
-    """, want_output=True)
+        """,
+        want_output=True
+    )
 
-    return spoken_text if spoken_text else None
+    if spoken_text:
+        print(f"🎙️ Recognized Speech: {spoken_text}")  # Debugging log
+        return spoken_text
+    else:
+        return None
 
 def translate_to_english(text, source_lang, detect_only=False):
     """Translate text to English or detect language."""
