@@ -24,7 +24,7 @@ def report_issue():
         spoken_text = speech_to_text(language)
         if spoken_text:
             st.session_state.issue_description = spoken_text
-            st.experimental_rerun()  # Force UI update
+            st.rerun()  # Force UI update
         else:
             st.warning("No speech detected. Please try again.")
 
@@ -33,6 +33,8 @@ def report_issue():
     # Language validation
     if issue_description and language != "English":
         detected_language = translate_to_english(issue_description, language, detect_only=True)
+        print(f"User Input: {issue_description}")  # Debugging
+        print(f"Detected Language: {detected_language}, Selected: {language}") 
         if detected_language != language:
             st.error(f"Please provide the input in the chosen language: {language}")
             return
