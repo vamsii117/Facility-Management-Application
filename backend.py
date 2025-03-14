@@ -370,6 +370,61 @@ TRANSLATE_MAP = {
     "Malay": "ms",
     "Tamil": "ta"
 }
+from streamlit_js_eval import streamlit_js_eval
+
+def speech_to_text():
+    spoken_text = streamlit_js_eval(js_expressions="window.SpeechRecognition || window.webkitSpeechRecognition ? new Promise((resolve) => { const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); recognition.lang = 'en-US'; recognition.onresult = (event) => resolve(event.results[0][0].transcript); recognition.start(); }) : 'Speech recognition not supported'", want_output=True)
+    
+    return spoken_text if spoken_text else "Speech recognition not supported"
+
+# Example usage in Streamlit:
+if st.button("🎤 Speak instead"):
+    st.write("Listening...")
+    text = speech_to_text()
+    if text:
+        st.session_state.issue_description = text
+    else:
+        st.warning("No speech detected. Please try again.")
+        
+def translate_to_english(text, source_lang, detect_only=False):
+    if source_lang == "English":  # No translation needed
+        return text
+    
+    try:
+        translator = Translator()
+        detected = translator.detect(text)
+        detected_lang = detected.lang  # Get detected language code
+        print(f"Detected Language: {detected_lang} (Expected: {TRANSLATE_MAP.get(source_lang)})")  # Debugging
+        
+        # Normalize detected language for consistency
+        normalized_lang = detected_lang.split('-')[0]  # Extract primary code
+        
+        # Map normalized language codes to source languages
+        language_map = {
+            "ms": "Malay",
+            "id": "Malay",  # Treat Indonesian as Malay
+            "zh": "Chinese",
+            "ta": "Tamil"
+        }
+        
+        if detect_only:
+            return language_map.get(normalized_lang, "English")
+        
+        if normalized_lang != TRANSLATE_MAP.get(source_lang):
+            print(f"Mismatch: Expected {TRANSLATE_MAP.get(source_lang)}, but detected {normalized_lang}")  # Debugging
+        
+        translated_text = translator.translate(
+            text, 
+            src=TRANSLATE_MAP.get(source_lang, "en"), 
+            dest="en"
+        ).text
+        return translated_text
+    
+    except Exception as e:
+        print(f"Translation failed: {e}")
+        return text  # Return original text if translation fails
+
+"""
 #using google speech recognition
 def speech_to_text(language='en', timeout=5):
     recognizer = sr.Recognizer()
@@ -389,7 +444,6 @@ def speech_to_text(language='en', timeout=5):
             return None  
     
     return None
-
 
 def translate_to_english(text, source_lang, detect_only=False):
     if source_lang == "English":  # No translation needed
@@ -426,7 +480,7 @@ def translate_to_english(text, source_lang, detect_only=False):
     except Exception as e:
         print(f"Translation failed: {e}")
         return text  # Return original text if translation fails
-
+"""
 # Categorize issue using OpenAI
 def categorize_issue(description):
     client = openai.Client()
