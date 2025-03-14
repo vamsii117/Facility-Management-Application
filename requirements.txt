@@ -10,3 +10,4 @@ python-dotenv
 speechrecognition
 googletrans
 #pyaudio
+streamlit_js_eval
