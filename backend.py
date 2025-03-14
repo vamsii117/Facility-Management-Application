@@ -373,56 +373,54 @@ TRANSLATE_MAP = {
 from streamlit_js_eval import streamlit_js_eval
 
 def speech_to_text():
-    spoken_text = streamlit_js_eval(js_expressions="window.SpeechRecognition || window.webkitSpeechRecognition ? new Promise((resolve) => { const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); recognition.lang = 'en-US'; recognition.onresult = (event) => resolve(event.results[0][0].transcript); recognition.start(); }) : 'Speech recognition not supported'", want_output=True)
+    spoken_text = streamlit_js_eval(
+        js_expressions="""window.SpeechRecognition || window.webkitSpeechRecognition 
+        ? new Promise((resolve) => { 
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); 
+            recognition.lang = 'en-US'; 
+            recognition.onresult = (event) => resolve(event.results[0][0].transcript); 
+            recognition.start(); 
+        }) 
+        : 'Speech recognition not supported'""",
+        want_output=True
+    )
     
     return spoken_text if spoken_text else "Speech recognition not supported"
 
-# Example usage in Streamlit:
-if st.button("🎤 Speak instead"):
-    st.write("Listening...")
-    text = speech_to_text()
-    if text:
-        st.session_state.issue_description = text
-    else:
-        st.warning("No speech detected. Please try again.")
-        
+
+# Translate function with detection option
 def translate_to_english(text, source_lang, detect_only=False):
     if source_lang == "English":  # No translation needed
         return text
-    
+
     try:
         translator = Translator()
-        detected = translator.detect(text)
-        detected_lang = detected.lang  # Get detected language code
-        print(f"Detected Language: {detected_lang} (Expected: {TRANSLATE_MAP.get(source_lang)})")  # Debugging
-        
-        # Normalize detected language for consistency
-        normalized_lang = detected_lang.split('-')[0]  # Extract primary code
-        
-        # Map normalized language codes to source languages
+        detected_lang = translator.detect(text).lang
+        normalized_lang = detected_lang.split('-')[0]  # Get primary language code
+
+        # Map normalized detected languages
         language_map = {
             "ms": "Malay",
             "id": "Malay",  # Treat Indonesian as Malay
             "zh": "Chinese",
             "ta": "Tamil"
         }
-        
+
         if detect_only:
             return language_map.get(normalized_lang, "English")
-        
-        if normalized_lang != TRANSLATE_MAP.get(source_lang):
-            print(f"Mismatch: Expected {TRANSLATE_MAP.get(source_lang)}, but detected {normalized_lang}")  # Debugging
-        
+
+        # Translate if detection is correct
         translated_text = translator.translate(
             text, 
             src=TRANSLATE_MAP.get(source_lang, "en"), 
             dest="en"
         ).text
         return translated_text
-    
+
     except Exception as e:
         print(f"Translation failed: {e}")
-        return text  # Return original text if translation fails
+        return text  # Return original if translation fails
+
 
 """
 #using google speech recognition
