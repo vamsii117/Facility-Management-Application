@@ -376,14 +376,14 @@ TRANSLATE_MAP = {
 }
 
 def speech_to_text(language):
-    """Uses browser-based speech recognition and returns text output."""
+    """Uses browser-based speech recognition and updates Streamlit session state."""
     language_code = LANGUAGE_MAP.get(language, "en-US")
 
     try:
         spoken_text = streamlit_js_eval(
             js_expressions=f"""
             new Promise((resolve) => {{
-                console.log("Starting speech recognition...");
+                console.log("🎤 Starting speech recognition...");
                 const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
                 recognition.lang = '{language_code}';
                 recognition.interimResults = false;
@@ -391,17 +391,17 @@ def speech_to_text(language):
 
                 recognition.onresult = (event) => {{
                     const transcript = event.results[0][0].transcript;
-                    console.log("Speech detected:", transcript);
-                    resolve(transcript);  // Ensure this resolves the text
+                    console.log("✅ Speech detected:", transcript);
+                    resolve(transcript);  
                 }};
                 
                 recognition.onerror = (event) => {{
-                    console.error("Speech Recognition Error:", event.error);
-                    resolve("");  // Return an empty string on error
+                    console.error("⚠️ Speech Recognition Error:", event.error);
+                    resolve("");  
                 }};
                 
                 recognition.onspeechend = () => {{
-                    console.log("Speech ended.");
+                    console.log("🛑 Speech ended.");
                     recognition.stop();
                 }};
                 
@@ -411,12 +411,14 @@ def speech_to_text(language):
             want_output=True
         )
 
-        return spoken_text.strip() if spoken_text else None  # Return speech result or None
+        if spoken_text and spoken_text.strip():
+            st.session_state.issue_description = spoken_text.strip()  # ✅ Update session state
+            return spoken_text.strip()
+        return None  
 
     except Exception as e:
-        print(f"⚠️ Speech recognition failed: {e}")
-        return None  # Handle failure gracefully
-
+        print(f"❌ Speech recognition failed: {e}")
+        return None  
 def translate_to_english(text, source_lang, detect_only=False):
     """Translate text to English or detect language."""
     if source_lang == "English":  
