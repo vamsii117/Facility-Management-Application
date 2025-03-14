@@ -16,17 +16,16 @@ def report_issue():
     # Initialize session state for issue description
     
 
-    # Initialize session state for issue description
+    # ✅ Ensure session state is initialized
     if "issue_description" not in st.session_state:
         st.session_state.issue_description = ""
 
     # 🎤 Speech-to-Text Button
     if st.button("🎤 Speak instead"):
-        st.info("Listening...")  
+        st.info("🎙️ Listening...")  
         spoken_text = speech_to_text(language)  # Capture speech
 
         if spoken_text:  
-            st.session_state.issue_description = spoken_text  # Store result
             st.success(f"✅ Speech Recognized: {spoken_text}")  # Show success
         else:
             st.warning("⚠️ No speech detected. Please try again.")
@@ -37,6 +36,7 @@ def report_issue():
         value=st.session_state.issue_description, 
         key="issue_description_input"
     )
+
     # Language validation
     if issue_description and language != "English":
         detected_language = translate_to_english(issue_description, language, detect_only=True)
