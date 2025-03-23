@@ -165,16 +165,21 @@ def resolve_issue():
 
     else:
         st.error("Invalid admin password! 🚫")
-    
+ from sqlalchemy import func
+
 def worker_dashboard():
     st.subheader("Worker Dashboard")
-    worker_name = st.text_input("Enter your name to log in:")
+    worker_name = st.text_input("Enter your name to log in:").strip()
 
     if worker_name:
-        worker = session.query(Worker).filter_by(name=worker_name).first()
+        # Convert input to lowercase for case-insensitive matching
+        normalized_name = worker_name.lower()
+
+        # Query database with case-insensitive matching
+        worker = session.query(Worker).filter(func.lower(Worker.name) == normalized_name).first()
         
         if worker:
-            st.write(f"Welcome, {worker_name}!")
+            st.write(f"Welcome, {worker.name}!")  # Use actual DB name for correct casing
             pending_issues, completed_issues = get_worker_issues(worker.worker_id)
 
             st.subheader("Pending Issues")
@@ -186,11 +191,11 @@ def worker_dashboard():
                     st.write(f"**Type:** {issue.type.capitalize()}")
                     st.write(f"**Description:** {issue.description}")
                     st.write(f"**Reported At:** {issue.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
-                    
+
                     if st.button(f"Mark as Completed (Issue {issue.issue_id})", key=f"resolve_{issue.issue_id}"):
                         response = resolve_worker_issue(issue.issue_id, worker.worker_id)
                         st.success(response)
-                        st.rerun()  # to refresh the page
+                        st.rerun()  # Refresh page to reflect updates
 
             st.subheader("Completed Issues")
             if not completed_issues:
