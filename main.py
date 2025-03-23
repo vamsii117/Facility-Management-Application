@@ -165,21 +165,30 @@ def resolve_issue():
 
     else:
         st.error("Invalid admin password! 🚫")
- from sqlalchemy import func
+from sqlalchemy import func
+
+from sqlalchemy import func
 
 def worker_dashboard():
     st.subheader("Worker Dashboard")
     worker_name = st.text_input("Enter your name to log in:").strip()
 
     if worker_name:
+        # Debugging: Print all worker names in DB
+        all_workers = session.query(Worker.name).all()
+        worker_names = [w[0] for w in all_workers]  # Extract names from tuples
+        st.write("Debug: Available Workers in DB →", worker_names)
+
         # Convert input to lowercase for case-insensitive matching
         normalized_name = worker_name.lower()
 
-        # Query database with case-insensitive matching
-        worker = session.query(Worker).filter(func.lower(Worker.name) == normalized_name).first()
-        
-        if worker:
-            st.write(f"Welcome, {worker.name}!")  # Use actual DB name for correct casing
+        # Fetch all worker names, normalize, and match manually
+        matching_worker = next((w for w in all_workers if w[0].strip().lower() == normalized_name), None)
+
+        if matching_worker:
+            worker = session.query(Worker).filter_by(name=matching_worker[0]).first()  # Fetch full worker object
+            st.write(f"Welcome, {worker.name}!")  # Use DB-stored name for correct formatting
+
             pending_issues, completed_issues = get_worker_issues(worker.worker_id)
 
             st.subheader("Pending Issues")
