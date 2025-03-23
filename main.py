@@ -26,6 +26,7 @@ def report_issue():
         spoken_text = speech_to_text(language)  # Capture speech
 
         if spoken_text:  
+            st.session_state.issue_description = spoken_text
             st.success(f"✅ Speech Recognized: {spoken_text}")  # Show success
         else:
             st.warning("⚠️ No speech detected. Please try again.")
