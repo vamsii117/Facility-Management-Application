@@ -301,6 +301,10 @@ import streamlit as st
 import io
 import base64
 from PIL import Image
+import streamlit as st
+import io
+import base64
+from PIL import Image
 
 def report_issue_by_image():
     st.subheader("Report AC Issue by Image")
@@ -347,16 +351,17 @@ def report_issue_by_image():
                         index=issues.index(st.session_state.selected_issue) if st.session_state.selected_issue in issues else 0
                     )
 
-                    # ✅ Extract only the issue name (removing description)
-                    selected_issue_name = selected_issue_full.split(" - ")[0].strip().lower()
+                    # ✅ Extract only the issue name, removing numbering and special characters
+                    selected_issue_name = selected_issue_full.split(" - ")[-1].strip()  # Take only the text after '-'
+                    selected_issue_name = selected_issue_name.lstrip("0123456789. *")  # Remove leading numbers, dots, asterisks
 
                     if st.button("Done"):
                         st.session_state.done_clicked = True
                         st.session_state.selected_issue = selected_issue_name
 
                 if st.session_state.get("done_clicked", False):
-                    # ✅ Store in lowercase with only "Brand - Issue Name"
-                    issue_text = f"{appliance.lower()} - {st.session_state.selected_issue}"
+                    # ✅ Format as "brand ac - issue name"
+                    issue_text = f"{appliance.lower()} ac - {st.session_state.selected_issue.lower()}"
                     st.session_state.issue_description = issue_text
                     st.info("You can now submit the issue.")
 
