@@ -357,6 +357,67 @@ def report_issue_by_image():
             else:
                 st.error("Could not identify the AC brand. Please try another image.")
 
+"""
+def report_issue_by_image():
+    st.subheader("Report AC Issue by Image")
+
+    uploaded_file = st.file_uploader("Upload an image of the AC", type=["jpg", "jpeg", "png"])
+
+    if uploaded_file:
+        if "last_uploaded_file" in st.session_state and st.session_state.last_uploaded_file != uploaded_file:
+            st.session_state.detected_appliance = None
+            st.session_state.issues = []
+            st.session_state.selected_issue = None
+            st.session_state.done_clicked = False
+
+        st.session_state.last_uploaded_file = uploaded_file
+
+        uploaded_image = Image.open(uploaded_file).convert("RGB")
+        st.image(uploaded_image, caption="Uploaded Image", use_container_width=True)
+
+        if st.button("Detect Appliance"):
+            img_bytes = io.BytesIO()
+            uploaded_image.save(img_bytes, format="PNG")
+            extracted_text = extract_text_from_image(img_bytes.getvalue())
+
+            appliance = identify_ac_company(extracted_text)
+
+            st.session_state.detected_appliance = appliance if appliance else "Unknown"
+            st.session_state.issues = get_common_issues(appliance) if appliance else []
+            st.session_state.selected_issue = None  # Reset issue selection
+
+        if "detected_appliance" in st.session_state and st.session_state.detected_appliance:
+            appliance = st.session_state.detected_appliance
+            issues = st.session_state.issues
+
+            if appliance != "Unknown":
+                st.success(f"Detected AC Brand: {appliance}")
+
+                if issues:
+                    if st.session_state.selected_issue not in issues:
+                        st.session_state.selected_issue = issues[0]
+
+                    selected_issue_full = st.selectbox(
+                        "Select your issue:",
+                        options=issues,
+                        index=issues.index(st.session_state.selected_issue) if st.session_state.selected_issue in issues else 0
+                    )
+
+                    # ✅ Extract only the issue name before storing
+                    selected_issue_name = selected_issue_full.split(" - ")[0]
+
+                    if st.button("Done"):
+                        st.session_state.done_clicked = True
+                        st.session_state.selected_issue = selected_issue_name
+
+                if st.session_state.get("done_clicked", False):
+                    issue_text = f"{appliance} AC - {st.session_state.selected_issue}"
+                    st.session_state.issue_description = issue_text
+                    st.info("You can now submit the issue.")
+
+            else:
+                st.error("Could not identify the AC brand. Please try another image.")
+"""
 def main():
     st.sidebar.title("Navigation")
     option = st.sidebar.radio("Go to", ["User Section", "Report Issue by Image", "Admin Section", "Worker Dashboard"])
