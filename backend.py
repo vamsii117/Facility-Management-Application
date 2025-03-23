@@ -414,7 +414,6 @@ TRANSLATE_MAP = {
     "Malay": "ms",
     "Tamil": "ta"
 }
-
 def speech_to_text(language):
     """Uses browser-based speech recognition and updates Streamlit session state."""
     language_code = LANGUAGE_MAP.get(language, "en-US")
@@ -459,6 +458,7 @@ def speech_to_text(language):
     except Exception as e:
         print(f"❌ Speech recognition failed: {e}")
         return None  
+ 
         """
 def translate_to_english(text, source_lang, detect_only=False):
     Translate text to English or detect language.
