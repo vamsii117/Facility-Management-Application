@@ -452,12 +452,13 @@ def speech_to_text(language):
 
         if spoken_text and spoken_text.strip():
             st.session_state.issue_description = spoken_text.strip()  # ✅ Update session state
-            return spoken_text.strip()
+            st.rerun()  # 🔄 Force Streamlit to refresh UI immediately
         return None  
 
     except Exception as e:
         print(f"❌ Speech recognition failed: {e}")
         return None  
+
  
         """
 def translate_to_english(text, source_lang, detect_only=False):
