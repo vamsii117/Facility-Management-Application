@@ -13,9 +13,22 @@ def report_issue():
     user_identifier = st.text_input("Enter your username (in English):", key="report_user")
     language = st.selectbox("Choose your language:", ["English", "Malay", "Chinese", "Tamil"], key="language_select")
 
-    # Initialize session state for issue description
-    
+    # ✅ Ensure session state is initialized
+    if "issue_description" not in st.session_state:
+        st.session_state.issue_description = ""
 
+    # 🎤 Speech-to-Text Button
+    if st.button("🎤 Speak instead"):
+        st.info("🎙️ Listening...")  
+        speech_to_text(language)  # 🎤 Capture speech (UI will refresh)
+
+    # 📝 Text Area with Persistent Speech Output
+    issue_description = st.text_area(
+        "Describe your issue:", 
+        value=st.session_state.issue_description,  # ✅ Ensure UI reflects recognized text
+        key="issue_description_input"
+    )
+    """
     # ✅ Ensure session state is initialized
     if "issue_description" not in st.session_state:
         st.session_state.issue_description = ""
@@ -37,7 +50,7 @@ def report_issue():
         value=st.session_state.issue_description, 
         key="issue_description_input"
     )
-
+    """
     # Language validation
     if issue_description and language != "English":
         detected_language = translate_to_english(issue_description, language, detect_only=True)
