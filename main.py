@@ -1,7 +1,7 @@
 import streamlit as st
 from backend import (
     check_ticket_status_by_user, assign_worker, categorize_issue, mark_issue_resolved,extract_text_from_image,encode_image,fetch_issues,fetch_issue_data,
-    speech_to_text, get_common_issues,identify_company_by_image,get_image_embedding,identify_ac_company,translate_to_english, session, Issue, Worker, Ticket, get_worker_issues, resolve_worker_issue
+    speech_to_text, get_common_issues,identify_company_by_image,clean_issue_name,get_image_embedding,identify_ac_company,translate_to_english, session, Issue, Worker, Ticket, get_worker_issues, resolve_worker_issue
 )
 import uuid
 import re
@@ -223,14 +223,6 @@ import streamlit as st
 import io
 import re
 from PIL import Image
-
-def clean_issue_name(issue_text):
-    """Extracts only the issue name from OpenAI-generated text."""
-    # Remove numbering (e.g., "2. ")
-    issue_text = re.sub(r"^\d+\.\s*", "", issue_text)
-    # Extract text before the first dash (e.g., "Leaking Water - Water leakage occurs...")
-    issue_name = issue_text.split(" - ")[0].strip()
-    return issue_name
 
 def report_issue_by_image():
     st.subheader("Report AC Issue by Image")
