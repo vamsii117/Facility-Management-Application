@@ -308,6 +308,18 @@ from PIL import Image
 import streamlit as st
 import io
 from PIL import Image
+import streamlit as st
+import io
+import re
+from PIL import Image
+
+def clean_issue_name(issue_text):
+    """Extracts only the issue name from OpenAI-generated text."""
+    # Remove numbering (e.g., "2. ")
+    issue_text = re.sub(r"^\d+\.\s*", "", issue_text)
+    # Extract text before the first dash (e.g., "Leaking Water - Water leakage occurs...")
+    issue_name = issue_text.split(" - ")[0].strip()
+    return issue_name
 
 def report_issue_by_image():
     st.subheader("Report AC Issue by Image")
@@ -345,7 +357,6 @@ def report_issue_by_image():
                 st.success(f"Detected AC Brand: {appliance}")
 
                 if issues:
-                    # Ensure selected issue is in the list
                     if st.session_state.selected_issue not in issues:
                         st.session_state.selected_issue = issues[0]
 
@@ -355,12 +366,12 @@ def report_issue_by_image():
                         index=issues.index(st.session_state.selected_issue) if st.session_state.selected_issue in issues else 0
                     )
 
-                    # ✅ Extract only the issue name before storing
-                    selected_issue_name = selected_issue_full.split(" - ")[0].strip()
+                    # ✅ Extract cleaned issue name
+                    selected_issue_name = clean_issue_name(selected_issue_full)
 
                     if st.button("Done"):
                         st.session_state.done_clicked = True
-                        st.session_state.selected_issue = selected_issue_name  # Store cleaned issue name
+                        st.session_state.selected_issue = selected_issue_name
 
                 if st.session_state.get("done_clicked", False):
                     issue_text = f"{appliance} AC - {st.session_state.selected_issue}"
