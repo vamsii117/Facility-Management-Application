@@ -177,8 +177,6 @@ def worker_dashboard():
         # Debugging: Print all worker names in DB
         all_workers = session.query(Worker.name).all()
         worker_names = [w[0] for w in all_workers]  # Extract names from tuples
-        st.write("Debug: Available Workers in DB →", worker_names)
-
         # Convert input to lowercase for case-insensitive matching
         normalized_name = worker_name.lower()
 
