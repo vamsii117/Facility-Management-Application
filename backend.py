@@ -149,21 +149,37 @@ import base64
 import io
 import numpy as np
 from PIL import Image
+import streamlit as st
+import openai
+import base64
+import io
+from PIL import Image
+import re
+import numpy as np
+from fastapi import HTTPException
+from starlette.responses import JSONResponse
+
 
 # List of known AC companies
 known_ac_companies = ["Daikin", "Mitsubishi", "Samsung", "LG", "Whirlpool", "Voltas", "Hitachi", "Panasonic"]
 
 def encode_image(image_bytes):
     """Encodes image bytes to a base64 string for OpenAI API."""
-    return base64.b64encode(image_bytes).decode("utf-8")
+    try:
+        return base64.b64encode(image_bytes).decode("utf-8")
+    except Exception as e:
+        st.error(f"Error encoding image: {e}")
+        return None  # Return None if encoding fails
+
 
 def extract_text_from_image(image_bytes):
-    """Uses OpenAI GPT-4o to extract text from an image."""
-    try:
-        base64_image = encode_image(image_bytes)
-        client = openai.OpenAI(api_key=openai.api_key)  # Fix client initialization
+    """Extracts text from an image using OpenAI GPT-4o."""
+    base64_image = encode_image(image_bytes)
+    if not base64_image:
+        return "Image encoding failed."
 
-        response = client.chat.completions.create(
+    try:
+        response = openai.ChatCompletion.create(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": "Extract any readable brand name or text from the given image."},
@@ -178,23 +194,23 @@ def extract_text_from_image(image_bytes):
             max_tokens=300
         )
 
-        # Validate response structure
-        if response and response.choices and response.choices[0].message:
-            content = response.choices[0].message.content.strip()
-            return content if content else "No text extracted from the image."
-
-        return "No text extracted from the image."
+        return response["choices"][0]["message"]["content"].strip() or "No text extracted."
 
     except Exception as e:
-        print(f"Error extracting text from image: {e}")
-        return f"Error occurred: {e}"
+        st.error(f"OpenAI API error: {e}")
+        return "Error occurred while extracting text."
+
+
+# List of known AC brands
+known_ac_companies = ["Daikin", "Mitsubishi", "Samsung", "LG", "Whirlpool", "Voltas", "Hitachi", "Panasonic"]
 
 def identify_ac_company(extracted_text):
-    """Matches extracted text with known AC company names."""
+    """Matches extracted text with known AC brand names."""
     for company in known_ac_companies:
         if company.lower() in extracted_text.lower():
             return company
     return "Unknown"
+
 
 def get_image_embedding(image):
     """Generate OpenAI image embedding for similarity comparison."""
@@ -239,13 +255,14 @@ def identify_company_by_image(uploaded_image, sample_images):
     return best_match if highest_similarity > 0.7 else "Unknown"
 
 def get_common_issues(company):
-    """Generates common issues dynamically for the detected AC brand using OpenAI."""
+    """Generates a list of common AC issues for the detected brand using OpenAI."""
+    if company == "Unknown":
+        return ["No common issues found."]
+
     try:
         prompt = f"List 5 common issues for {company} air conditioners with a short description. Format: 'Issue Name - Description'."
 
-        client = openai.OpenAI(api_key=openai.api_key)  # Fix client initialization
-
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
@@ -254,14 +271,15 @@ def get_common_issues(company):
             max_tokens=200
         )
 
-        issues_text = response.choices[0].message.content
+        issues_text = response["choices"][0]["message"]["content"]
         issues = [issue.strip() for issue in issues_text.split("\n") if issue]
 
         return issues if issues else ["No common issues found."]
 
     except Exception as e:
-        print(f"Error fetching common issues: {e}")
+        st.error(f"Error fetching common issues: {e}")
         return ["Error occurred while fetching issues."]
+
 
 ###################################################################################################
 
