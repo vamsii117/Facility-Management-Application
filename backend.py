@@ -161,11 +161,12 @@ from starlette.responses import JSONResponse
 
 def clean_issue_name(issue_text):
     """Extracts only the issue name from OpenAI-generated text."""
-    # Remove numbering (e.g., "2. ")
-    issue_text = re.sub(r"^\d+\.\s*", "", issue_text)
-    # Extract text before the first dash (e.g., "Leaking Water - Water leakage occurs...")
+    # Remove leading numbering (e.g., "2. " or "2) ")
+    issue_text = re.sub(r"^\d+[\.\)]\s*", "", issue_text)
+    # Extract text before the first dash (ignores extra dashes)
     issue_name = issue_text.split(" - ")[0].strip()
     return issue_name
+
 # List of known AC companies
 known_ac_companies = ["Daikin", "Mitsubishi", "Samsung", "LG", "Whirlpool", "Voltas", "Hitachi", "Panasonic"]
 
