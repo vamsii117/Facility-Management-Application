@@ -142,13 +142,13 @@ def initialize_workers():
         session.commit()
 
 initialize_workers()
+
 ###################################################################################################
-import streamlit as st
 import openai
 import base64
-from PIL import Image
 import io
 import numpy as np
+from PIL import Image
 
 # List of known AC companies
 known_ac_companies = ["Daikin", "Mitsubishi", "Samsung", "LG", "Whirlpool", "Voltas", "Hitachi", "Panasonic"]
@@ -161,7 +161,8 @@ def extract_text_from_image(image_bytes):
     """Uses OpenAI GPT-4o to extract text from an image."""
     try:
         base64_image = encode_image(image_bytes)
-        client = openai.Client()
+        client = openai.OpenAI(api_key=openai.api_key)  # Fix client initialization
+
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -178,48 +179,57 @@ def extract_text_from_image(image_bytes):
         )
 
         # Validate response structure
-        if response.choices and len(response.choices) > 0:
+        if response and response.choices and response.choices[0].message:
             content = response.choices[0].message.content.strip()
-            if content:
-                return content
-        
-        print("No content found in response:", response)
+            return content if content else "No text extracted from the image."
+
         return "No text extracted from the image."
 
     except Exception as e:
         print(f"Error extracting text from image: {e}")
-        return "Error occurred while processing the image."
-
+        return f"Error occurred: {e}"
 
 def identify_ac_company(extracted_text):
     """Matches extracted text with known AC company names."""
     for company in known_ac_companies:
         if company.lower() in extracted_text.lower():
             return company
-    return None  # No matching company found
+    return "Unknown"
 
 def get_image_embedding(image):
     """Generate OpenAI image embedding for similarity comparison."""
-    buffered = io.BytesIO()
-    image.save(buffered, format="PNG")
-    image_bytes = buffered.getvalue()
+    try:
+        buffered = io.BytesIO()
+        image.save(buffered, format="PNG")
+        image_bytes = buffered.getvalue()
 
-    response = openai.Embedding.create(
-        model="text-embedding-ada-002",
-        input=image_bytes
-    )
-    
-    return np.array(response['data'][0]['embedding'])
+        client = openai.OpenAI(api_key=openai.api_key)  # Fix client initialization
+
+        response = client.embeddings.create(
+            model="text-embedding-ada-002",
+            input=image_bytes
+        )
+        
+        return np.array(response.data[0].embedding)
+
+    except Exception as e:
+        print(f"Error generating image embedding: {e}")
+        return None
 
 def identify_company_by_image(uploaded_image, sample_images):
     """Identify AC company using OpenAI embeddings if text extraction fails."""
     uploaded_embedding = get_image_embedding(uploaded_image)
+    if uploaded_embedding is None:
+        return "Unknown"
 
     best_match = None
     highest_similarity = 0.0
 
     for company, sample_image in sample_images.items():
         sample_embedding = get_image_embedding(sample_image)
+        if sample_embedding is None:
+            continue
+
         similarity = np.dot(uploaded_embedding, sample_embedding) / (np.linalg.norm(uploaded_embedding) * np.linalg.norm(sample_embedding))
 
         if similarity > highest_similarity:
@@ -230,26 +240,31 @@ def identify_company_by_image(uploaded_image, sample_images):
 
 def get_common_issues(company):
     """Generates common issues dynamically for the detected AC brand using OpenAI."""
-    prompt = f"List 5 common issues for {company} air conditioners with a short description. Format: 'Issue Name - Description' (e.g., 'Not Cooling - AC is running but not cooling properly')."
+    try:
+        prompt = f"List 5 common issues for {company} air conditioners with a short description. Format: 'Issue Name - Description'."
 
-    client = openai.Client()  # Initialize the OpenAI client (v1.0+ syntax)
+        client = openai.OpenAI(api_key=openai.api_key)  # Fix client initialization
 
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=200
-    )
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=200
+        )
 
-    issues_text = response.choices[0].message.content
-    issues = [issue.strip() for issue in issues_text.split("\n") if issue]
+        issues_text = response.choices[0].message.content
+        issues = [issue.strip() for issue in issues_text.split("\n") if issue]
 
-    return issues if issues else ["No common issues found."]
+        return issues if issues else ["No common issues found."]
 
+    except Exception as e:
+        print(f"Error fetching common issues: {e}")
+        return ["Error occurred while fetching issues."]
 
 ###################################################################################################
+
 # get worker issues
 def get_worker_issues(worker_id):
     pending_issues = session.query(Issue).filter_by(assigned_worker_id=worker_id, resolved=False).all()
